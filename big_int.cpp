@@ -1,13 +1,30 @@
 #include <vector>
 #include <cmath>
+#include <string>
 #include "big_int.h"
 
 using namespace std;
+
+typedef long long int ll;
 
 void BigInt::removeLeadZero() {
     while (numVec.size() > 1 && numVec.back() == 0) {
         numVec.pop_back();
     }
+}
+
+string BigInt::prettyPrint() const {
+    if (!sign) {
+        return "-" + abs(*this).prettyPrint();
+    }
+    BigInt quotient = (*this) / BigInt(10);
+    BigInt remainder = (*this) % BigInt(10);
+    string answer = "";
+    if (quotient != BigInt(0)) {
+        answer += quotient.prettyPrint();
+    }
+    answer += to_string(remainder.getVec()[0]);
+    return answer;
 }
 
 void BigInt::shift(unsigned int m) {
@@ -18,24 +35,27 @@ void BigInt::shift(unsigned int m) {
     reverse(numVec.begin(), numVec.end());
 }
 
- BigInt::BigInt(vector<unsigned int>numVec, bool sign):
+BigInt::BigInt(): numVec{vector<unsigned int>{0}}, sign{true} {}
+
+BigInt::BigInt(vector<unsigned int>numVec, bool sign):
 numVec{numVec}, sign{(numVec == vector<unsigned int>{0}) ? true : sign} {
     removeLeadZero();
 }
 
 BigInt::BigInt(unsigned int num, bool sign):
-numVec{vector<unsigned int>{1, num}}, sign{!num ? true : sign} {}
+numVec{vector<unsigned int>{num}}, sign{!num ? true : sign} {}
 
-/* compile error...will come to that later
+
 BigInt::BigInt(int num):
-numVec{vector<unsigned int>{1, (unsigned int)(0)}}, sign{(num >= 0)} {}
-*/
+numVec{vector<unsigned int>{(num >= 0 ? (unsigned int) num : (unsigned int) (-num))}}, sign{(num >= 0)} {}
+
  
 BigInt BigInt::operator-() const {
     return BigInt(numVec, !sign);
 }
 
 bool BigInt::operator==(const BigInt& other) const {
+    //cout << numVec.size() << "vec" << other.getVec().size() << endl;
     if (other.getVec().size() != numVec.size()) {
         return false;
     }
@@ -86,7 +106,7 @@ bool BigInt::operator<(const BigInt& other) const {
 }
 
 bool BigInt::operator>(const BigInt& other) const {
-    return (other > *this);
+    return (other < *this);
 }
 
 bool BigInt::operator<=(const BigInt& other) const {
@@ -107,7 +127,6 @@ BigInt BigInt::operator+(const BigInt& other) const {
     if (sign != other.sign) {
         return *this - (-other);
     }
-
     for (int i = 0; i < total_sz; ++i) {
         long long int k = (numVec.size() > i ? numVec[i] : 0);
         long long int l = (other.getVec().size() > i ? other.getVec()[i] : 0);
@@ -177,10 +196,17 @@ BigInt BigInt::operator*(const BigInt& other) const {
     }
     long long int carry = 0;
     for (int i = 0; i < n; ++i) {
-        answer.push_back((carry + numVec[i] * other.getVec()[0]) % limit);
-        carry = (carry + numVec[i] * other.getVec()[0]) / limit;
+        //cout << "PRODUCT" << numVec[i] << " " << other.getVec()[0] << endl;
+        long long int prod = (ll)numVec[i] * (ll)other.getVec()[0];
+        //cout << prod << endl;
+        answer.push_back((carry + prod) % limit);
+        carry = (carry +prod) / limit;
     }
-    return BigInt(answer, sign == !other.getSign());
+    //cout << "carry" << carry << endl;
+    if (carry) {
+        answer.push_back(carry);
+    }
+    return BigInt(answer, sign == other.getSign());
 }
 
 BigInt BigInt::operator/(const BigInt& other) const {
@@ -190,10 +216,13 @@ BigInt BigInt::operator/(const BigInt& other) const {
     if (other == BigInt(0, true)) {
         throw std::overflow_error("Divide by zero exception");
     }
+    int n = numVec.size();
     int m = other.getVec().size();
+    int shift_amount = n - m;
     BigInt target = BigInt(vector<unsigned int>(numVec.end() - m, numVec.end()), sign);
     if (abs(target) < abs(other)) {
         target = BigInt(vector<unsigned int>(numVec.end() - m - 1, numVec.end()), sign);
+        shift_amount = n - m - 1;
     }
     //now target / other is one 'bigDigit'
     long long int lo = 1;
@@ -201,24 +230,35 @@ BigInt BigInt::operator/(const BigInt& other) const {
     while (lo < hi) {
         long long int mid = lo + (hi -  lo + 1) / 2;
         BigInt testing = BigInt(mid, sign == other.getSign());
+        /*
+        cout << hi << " " << lo << " " << mid << endl;
+        cout << (testing * other).getVec().size() << " " << target.getVec().size() << " ";
+        cout << abs(testing * other).getVec().size() << " " << abs(target).getVec().size() << endl;
+        cout << (abs(testing * other) <= abs(target)) << endl;
+         */
         if (abs(testing * other) <= abs(target)) {
             lo = mid;
         }
         else {
             hi = mid - 1;
         }
+        //cout << lo << " " << hi << endl;
     }
+    //cout << "done" << endl;
     //now that lo = hi
     BigInt digit = BigInt(hi, sign == other.getSign());
-    return digit + (target - (digit * other)) / other;
+    digit.shift(shift_amount);
+    BigInt prod = digit * other;
+    return ((*this - prod) / other) + digit;
 }
 
 BigInt BigInt::operator%(const BigInt& other) const {
     return *this - other * (*this / other);
 }
 
-BigInt BigInt::abs(const BigInt& other) const {
-    return BigInt(numVec, true);
+BigInt abs(const BigInt& other) {
+    
+    return BigInt(other.getVec(), true);
 }
 
 vector<unsigned int> BigInt::getVec() const {
@@ -227,5 +267,35 @@ vector<unsigned int> BigInt::getVec() const {
 
 bool BigInt::getSign() const {
     return sign;
+}
+
+ostream &operator<<(ostream &out, const BigInt &bi) {
+    out << bi.prettyPrint();
+    return out;
+}
+
+istream &operator>>(istream &in, BigInt &bi) {
+    string s;
+    cin >> s;
+    int n = s.length();
+    bi = BigInt(0);
+    for (int i = 0; i < n; ++i) {
+        if (s[0] == '-') {
+            bi.sign = false;
+        }
+        if (s[i] < '0' && s[i] > '9' && i > 0) {
+            break;
+        }
+        if (s[i] < '0' && s[i] > '9' && s[i] != '-') {
+            break;
+        }
+        int dgt = int(s[i]) - int('0');
+        bi = (bi * BigInt(10));
+        bi = (bi + BigInt(dgt));
+    }
+    if (bi.numVec == vector<unsigned int>{0}) {
+        bi.sign = true;
+    }
+    return in;
 }
         
