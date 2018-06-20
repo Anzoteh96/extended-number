@@ -1,6 +1,7 @@
 #include <vector>
 #include <cmath>
 #include <string>
+#include <algorithm>
 #include "big_int.h"
 
 using namespace std;
@@ -124,6 +125,9 @@ BigInt BigInt::operator+(const BigInt& other) const {
     long long int carry = 0;
     vector<unsigned int>answer;
     //For simplicity we just consider the case of both positive since the other case can be dealt similarly
+    if (other == BigInt(0)) {
+        return *this;
+    }
     if (sign != other.sign) {
         return *this - (-other);
     }
@@ -153,8 +157,8 @@ BigInt BigInt::operator-(const BigInt& other) const {
         long long int k = (numVec.size() > i ? numVec[i] : 0);
         long long int l = (other.getVec().size() > i ? other.getVec()[i] : 0);
         if (k - l - carry >= 0) {
-            carry = 0;
             answer.push_back(k - l - carry);
+            carry = 0;
         }
         else {
             long long int temp = k - l - carry;
@@ -175,20 +179,25 @@ BigInt BigInt::operator*(const BigInt& other) const {
     vector<unsigned int>answer;
     int n = numVec.size();
     int m = other.getVec().size();
+    vector<unsigned int> other_vec = other.getVec();
     int two_split = min(n, m);
     if (two_split > 1) {
         int split = two_split / 2;
-        vector<unsigned int>a0(numVec.begin(), numVec.begin() + split);
-        vector<unsigned int>a1(numVec.begin() + split, numVec.end());
-        vector<unsigned int>a2(other.getVec().begin(), other.getVec().begin() + split);
-        vector<unsigned int>a3(other.getVec().begin() + split, other.getVec().end());
+        vector<unsigned int>a0(split);
+        vector<unsigned int>a1(n - split);
+        vector<unsigned int>a2(split);
+        vector<unsigned int>a3(m - split);
+        copy(numVec.begin(), numVec.begin() + split, a0.begin());
+        copy(numVec.begin() + split, numVec.end(), a1.begin());
+        copy(other_vec.begin(), other_vec.begin() + split, a2.begin());
+        copy(other_vec.begin() + split, other_vec.end(), a3.begin());
         BigInt small = BigInt(a0, sign) * BigInt(a2, other.getSign());
         BigInt big = BigInt(a1, sign) * BigInt(a3, other.getSign());
         BigInt middle
         = (BigInt(a0, sign) + BigInt(a1, sign)) * (BigInt(a2, other.getSign()) +
                                                    BigInt(a3, other.getSign())) - small - big;
-        big.shift(2 * m);
-        middle.shift(m);
+        big.shift(2 * split);
+        middle.shift(split);
         return small + big + middle;
     }
     if (n < m) {
@@ -253,7 +262,7 @@ BigInt BigInt::operator/(const BigInt& other) const {
 }
 
 BigInt BigInt::operator%(const BigInt& other) const {
-    return *this - other * (*this / other);
+    return (*this - (other * (*this / other)));
 }
 
 BigInt abs(const BigInt& other) {
@@ -280,18 +289,19 @@ istream &operator>>(istream &in, BigInt &bi) {
     int n = s.length();
     bi = BigInt(0);
     for (int i = 0; i < n; ++i) {
-        if (s[0] == '-') {
+        if (i == 0 && s[i] == '-') {
             bi.sign = false;
+            continue;
         }
-        if (s[i] < '0' && s[i] > '9' && i > 0) {
-            break;
-        }
-        if (s[i] < '0' && s[i] > '9' && s[i] != '-') {
+        if ((s[i] < '0' || s[i] > '9') && (i > 0 || s[i] != '-')) {
             break;
         }
         int dgt = int(s[i]) - int('0');
         bi = (bi * BigInt(10));
         bi = (bi + BigInt(dgt));
+    }
+    if (s[0] == '-') {
+        bi.sign = false;
     }
     if (bi.numVec == vector<unsigned int>{0}) {
         bi.sign = true;

@@ -12,4 +12,4 @@ ${EXEC}: ${OBJECTS}
 .PHONY: clean
 
 clean:
-	rm *.o extnum
+	rm *.o *.d extnum
