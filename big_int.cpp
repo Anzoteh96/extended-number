@@ -239,21 +239,13 @@ BigInt BigInt::operator/(const BigInt& other) const {
     while (lo < hi) {
         long long int mid = lo + (hi -  lo + 1) / 2;
         BigInt testing = BigInt(mid, sign == other.getSign());
-        /*
-        cout << hi << " " << lo << " " << mid << endl;
-        cout << (testing * other).getVec().size() << " " << target.getVec().size() << " ";
-        cout << abs(testing * other).getVec().size() << " " << abs(target).getVec().size() << endl;
-        cout << (abs(testing * other) <= abs(target)) << endl;
-         */
         if (abs(testing * other) <= abs(target)) {
             lo = mid;
         }
         else {
             hi = mid - 1;
         }
-        //cout << lo << " " << hi << endl;
     }
-    //cout << "done" << endl;
     //now that lo = hi
     BigInt digit = BigInt(hi, sign == other.getSign());
     digit.shift(shift_amount);
@@ -263,6 +255,31 @@ BigInt BigInt::operator/(const BigInt& other) const {
 
 BigInt BigInt::operator%(const BigInt& other) const {
     return (*this - (other * (*this / other)));
+}
+
+BigInt& BigInt::operator+=(const BigInt& other) {
+    *this = (*this + other);
+    return *this;
+}
+
+BigInt& BigInt::operator-=(const BigInt& other) {
+    *this = (*this - other);
+    return *this;
+}
+
+BigInt& BigInt::operator*=(const BigInt& other) {
+    *this = (*this * other);
+    return *this;
+}
+
+BigInt& BigInt::operator/=(const BigInt& other) {
+    *this = (*this / other);
+    return *this;
+}
+
+BigInt& BigInt::operator%=(const BigInt& other) {
+    *this = (*this % other);
+    return *this;
 }
 
 BigInt abs(const BigInt& other) {
@@ -307,5 +324,19 @@ istream &operator>>(istream &in, BigInt &bi) {
         bi.sign = true;
     }
     return in;
+}
+
+BigInt gcd(const BigInt& b1, const BigInt& b2) {
+    if (b1 < BigInt(0) || b2 < BigInt(0)) {
+        return gcd(abs(b1), abs(b2));
+    }
+    if (b1 < b2) {
+        return gcd(b2, b1);
+    }
+    //b2 <= b1
+    if (b2 == BigInt(0)) {
+        return b1;
+    }
+    return gcd(b2, b1 % b2);
 }
         

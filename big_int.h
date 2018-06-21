@@ -32,7 +32,11 @@ public:
     BigInt operator*(const BigInt& other) const;
     BigInt operator/(const BigInt& other) const;
     BigInt operator%(const BigInt& other) const;
-    //BigInt max(BigInt other);
+    BigInt& operator+=(const BigInt& other);
+    BigInt& operator-=(const BigInt& other);
+    BigInt& operator*=(const BigInt& other);
+    BigInt& operator/=(const BigInt& other);
+    BigInt& operator%=(const BigInt& other);
     std::vector<unsigned int> getVec() const;
     bool getSign() const;
     friend std::ostream &operator<<(std::ostream &out, const BigInt &bi);
@@ -40,4 +44,5 @@ public:
 };
 
 BigInt abs(const BigInt& other);
+BigInt gcd(const BigInt& b1, const BigInt& b2);
 #endif
