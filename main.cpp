@@ -4,14 +4,16 @@
 using namespace std;
 
 int main () {
+    cout << "Enter two numbers n and m:" << endl;
     BigInt n, m;
     cin >> n >> m;
-    cout << n << " " << m << endl;
-    cout << n + m << endl;
-    cout << n - m << endl;
-    cout << n * m << endl;
-    cout << n / m << endl;
-    cout << n % m << endl;
+    cout << "n is " << n << endl;
+    cout << "m is " << m << endl;
+    cout << "n + m is " << n + m << endl;
+    cout << "n - m is " << n - m << endl;
+    cout << "n * m is " << n * m << endl;
+    cout << "n / m is " << n / m << endl;
+    cout << "n % m is " << n % m << endl;
     /*
     vector<unsigned int> a1 = (n + m).getVec();
     vector<unsigned int> a2 = (n - m).getVec();

@@ -4,10 +4,13 @@
 #include <iostream>
 #include <string>
 
-const long long int limit = 2147483648;
+const int limit = 2;
+//New revolution: put everything into 0 and 1
+//For one, closer to the machine code arithmetic mechanism;
+//For two, easier to do bitwise: needed for the Num_Ring later
 
 class BigInt {
-    std::vector<unsigned int> numVec;
+    std::vector<bool> numVec;
     bool sign;
     //private helper functions
     void removeLeadZero();
@@ -15,7 +18,7 @@ class BigInt {
 public:
     void shift(unsigned int m);
     BigInt();
-    BigInt(std::vector<unsigned int>numVec, bool sign);
+    BigInt(std::vector<bool>numVec, bool sign);
     BigInt(unsigned int num, bool sign);
     explicit BigInt(int num);
     //negation and comparators
@@ -37,7 +40,9 @@ public:
     BigInt& operator*=(const BigInt& other);
     BigInt& operator/=(const BigInt& other);
     BigInt& operator%=(const BigInt& other);
-    std::vector<unsigned int> getVec() const;
+    BigInt operator<<(int m);
+    BigInt operator>>(int m);
+    std::vector<bool> getVec() const;
     bool getSign() const;
     friend std::ostream &operator<<(std::ostream &out, const BigInt &bi);
     friend std::istream &operator>>(std::istream &in, BigInt &bi);
