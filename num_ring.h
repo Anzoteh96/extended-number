@@ -13,3 +13,5 @@ public:
     BigInt getNum() const;
     BigInt getBase() const;
 };
+
+NumRing exp (const NumRing& base, const BigInt& bi);
