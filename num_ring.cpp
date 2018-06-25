@@ -32,35 +32,34 @@ BigInt Inverse (const BigInt& num, const BigInt& div) {
     return left.second;
 }
 
-NumRing::NumRing(BigInt base, BigInt num) : base{abs(base)}, num{num} {
-    if (base == BigInt(0)) {
-        throw "division by zero";
-    }
-    num %= abs(base);
+NumRing::NumRing(BigInt base, BigInt num) :
+base{base == BigInt(0) ? throw "division by zero" : abs(base)},
+num{((num % abs(base)) + base) % base} {
     if (num < BigInt(0)) {
         num += base;
     }
 }
 
 NumRing NumRing::operator+(const NumRing& other) const {
+    //cout << base << " " << other.getBase() << endl;
     if (base != other.getBase()) {
         throw "invalid bases";
     }
-    return NumRing((num + other.getNum()), base);
+    return NumRing(base, (num + other.getNum()));
 }
 
 NumRing NumRing::operator-(const NumRing& other) const {
     if (base != other.getBase()) {
         throw "invalid bases";
     }
-    return NumRing((num - other.getNum()), base);
+    return NumRing(base, (num - other.getNum()));
 }
 
 NumRing NumRing::operator*(const NumRing& other) const {
     if (base != other.getBase()) {
         throw "invalid bases";
     }
-    return NumRing((num * other.getNum()), base);
+    return NumRing(base, (num * other.getNum()));
 }
 
 NumRing NumRing::operator/(const NumRing& other) const {
@@ -69,7 +68,7 @@ NumRing NumRing::operator/(const NumRing& other) const {
     }
     BigInt div = other.getNum();
     BigInt inv = Inverse(div, base);
-    return NumRing((num * inv), base);
+    return NumRing(base, (num * inv));
 }
 
 NumRing exp (const NumRing& theBase, const BigInt& bi) {
@@ -85,13 +84,13 @@ NumRing exp (const NumRing& theBase, const BigInt& bi) {
         now = (now * now);
         now %= theBase.getBase();
     }
-    return NumRing(answer, theBase.getBase());
+    return NumRing(theBase.getBase(), answer);
 }
 
 BigInt NumRing::getNum() const {
-    return base;
+    return num;
 }
 
 BigInt NumRing::getBase() const {
-    return num;
+    return base;
 }
