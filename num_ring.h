@@ -5,7 +5,7 @@ class NumRing {
     const BigInt base;
     BigInt num;
 public:
-    NumRing (BigInt base, BigInt num = BigInt(0));
+    NumRing (const BigInt& base, const BigInt& num = BigInt(0));
     NumRing operator+(const NumRing& other) const;
     NumRing operator-(const NumRing& other) const;
     NumRing operator*(const NumRing& other) const;

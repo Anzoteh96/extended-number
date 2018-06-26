@@ -74,6 +74,9 @@ BigInt::BigInt(): numVec{vector<bool>{0}}, sign{true} {}
 BigInt::BigInt(vector<bool>numVec, bool sign):
 numVec{numVec}, sign{(numVec == vector<bool>{0}) ? true : sign} {
     removeLeadZero();
+    if (numVec == vector<bool>{0}) {
+        this->sign = true;
+    }
 }
 
 BigInt::BigInt(unsigned int num, bool sign):

@@ -11,7 +11,7 @@ BigInt Inverse (const BigInt& num, const BigInt& div) {
     pair<BigInt, BigInt> right = make_pair(BigInt(0), BigInt(1));
     BigInt num1 = num;
     BigInt div1 = div;
-    while (div != BigInt(0)) {
+    while (div1 != BigInt(0)) {
         BigInt quo = num1 / div1;
         BigInt rem = num1 % div1;
         BigInt neo_first = left.first - quo * right.first;
@@ -21,22 +21,27 @@ BigInt Inverse (const BigInt& num, const BigInt& div) {
         div1 = rem;
         left = right;
         right = neo;
+        //cout << num1 << " " << div1 << " " << left.first << " " << left.second << endl;
     }
     left.second %= num;
     if (left.second < BigInt(0)) {
         left.second += num;
     }
+    
     if (num1 != BigInt(1)) {
         throw "gcd not 1";
     }
     return left.second;
 }
 
-NumRing::NumRing(BigInt base, BigInt num) :
-base{base == BigInt(0) ? throw "division by zero" : abs(base)},
-num{((num % abs(base)) + base) % base} {
-    if (num < BigInt(0)) {
-        num += base;
+NumRing::NumRing(const BigInt& base, const BigInt& num) :
+base{abs(base)}, num{num % base} {
+    if (base == BigInt(0)) {
+        std::overflow_error("Divide by zero exception");
+    }
+    this->num %= base;
+    if (this->num < BigInt(0)) {
+        this->num += base;
     }
 }
 
@@ -67,7 +72,8 @@ NumRing NumRing::operator/(const NumRing& other) const {
         throw "invalid bases";
     }
     BigInt div = other.getNum();
-    BigInt inv = Inverse(div, base);
+    
+    BigInt inv = Inverse(base, div);
     return NumRing(base, (num * inv));
 }
 

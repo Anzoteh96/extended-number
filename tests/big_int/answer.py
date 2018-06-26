@@ -15,5 +15,8 @@ for i in range (0, 100):
 	if (m == 0):
 		g.write('m is 0, division is undefined')
 	else:
-		g.write('n / m is ' + str(n // m) + '\n')
-		g.write('n % m is ' + str(n % m) + '\n')
+		quo = (abs(n) // abs(m))
+	if (n * m < 0):
+		quo = -quo
+	g.write('n / m is ' + str(quo) + '\n')
+	g.write('n % m is ' + str(n - quo * m) + '\n')
