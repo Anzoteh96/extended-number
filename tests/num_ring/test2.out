@@ -1,0 +1,9 @@
+Enter the number base b:
+Enter two numbers n and m:
+b is 789902
+n mod b is 198325
+m mod b is 263690
+n + m is 462015
+n - m is 724537
+n * m is 67438
+n ** m is 717055

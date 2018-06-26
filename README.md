@@ -17,3 +17,5 @@ There are a few features making this different from normal integers:
 - Since numbers wrap around (n is considered as 0), total ordering no longer makes sense. 
 - The number a/b can still be an integer if b is relatively prime to n. 
 - The fast exponentiation (a**b in python, a^b in LaTeX, pow(a, b) in C++) is possible without going over-memory. 
+
+Status: It does seem like the answers are correct, but the fast exponentiation is not efficient enough if there are more than 20 digits. The bottleneck lies with multiplication of BigInt. 

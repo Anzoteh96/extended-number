@@ -1,0 +1,9 @@
+Enter the number base b:
+Enter two numbers n and m:
+b is 522886867158704
+n mod b is 291251095859896
+m mod b is 273492430140647
+n + m is 41856658841839
+n - m is 17758665719249
+n * m is 270082821195336
+n ** m is 355361038047792

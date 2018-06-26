@@ -1,0 +1,9 @@
+Enter the number base b:
+Enter two numbers n and m:
+b is 470
+n mod b is 458
+m mod b is 264
+n + m is 252
+n - m is 194
+n * m is 122
+n ** m is 96

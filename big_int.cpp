@@ -73,7 +73,7 @@ BigInt::BigInt(): numVec{vector<bool>{0}}, sign{true} {}
 
 BigInt::BigInt(vector<bool>numVec, bool sign):
 numVec{numVec}, sign{(numVec == vector<bool>{0}) ? true : sign} {
-    removeLeadZero();
+    this->removeLeadZero();
     if (numVec == vector<bool>{0}) {
         this->sign = true;
     }
@@ -180,7 +180,7 @@ BigInt BigInt::operator+(const BigInt& other) const {
     int sz = numVec.size();
     int other_sz = other.getVec().size();
     int total_sz = (sz >= other_sz ? sz : other_sz);
-    int carry = 0;
+    short int carry = 0;
     vector<bool>answer;
     //For simplicity we just consider the case of both positive since the other case can be dealt similarly
     if (other == BigInt(0)) {
@@ -190,12 +190,14 @@ BigInt BigInt::operator+(const BigInt& other) const {
         return *this - (-other);
     }
     for (int i = 0; i < total_sz; ++i) {
-        int k = (numVec.size() > i ? numVec[i] : 0);
-        int l = (other.getVec().size() > i ? other.getVec()[i] : 0);
-        answer.push_back((k + l + carry) % limit);
+        short int k = (numVec.size() > i ? numVec[i] : 0);
+        short int l = (other.getVec().size() > i ? other.getVec()[i] : 0);
+        answer.push_back(k ^ l ^ carry);
         carry = (k + l + carry) / limit;
     }
-    answer.push_back(carry);
+    if (carry) {
+        answer.push_back(carry);
+    }
     return BigInt(answer, sign);
 }
 
@@ -210,12 +212,12 @@ BigInt BigInt::operator-(const BigInt& other) const {
     int other_sz = other.getVec().size();
     int total_sz = (sz >= other_sz ? sz : other_sz);
     vector<bool> answer;
-    int borrow = 0;
+    short int borrow = 0;
     for (int i = 0; i < total_sz; ++i) {
-        int k = (numVec.size() > i ? numVec[i] : 0);
-        int l = (other.getVec().size() > i ? other.getVec()[i] : 0);
-        int temp = k - l - borrow;
-        int temp_borrow = 0;
+        short int k = (numVec.size() > i ? numVec[i] : 0);
+        short int l = (other.getVec().size() > i ? other.getVec()[i] : 0);
+        short int temp = k - l - borrow;
+        short int temp_borrow = 0;
         while (temp < 0) {
             temp += limit;
             ++temp_borrow;
@@ -228,6 +230,9 @@ BigInt BigInt::operator-(const BigInt& other) const {
 
 BigInt BigInt::operator*(const BigInt& other) const {
     //we shall use Karatsuba's algorithm to speed up computations
+    if (*this == BigInt(0) || other == BigInt(0)) {
+        return BigInt(0);
+    }
     vector<bool>answer;
     int n = numVec.size();
     int m = other.getVec().size();
@@ -248,17 +253,16 @@ BigInt BigInt::operator*(const BigInt& other) const {
         BigInt middle
         = (BigInt(a0, sign) + BigInt(a1, sign)) * (BigInt(a2, other.getSign()) +
                                                    BigInt(a3, other.getSign())) - small - big;
-        big.shift(2 * split);
-        middle.shift(split);
-        return small + big + middle;
+        return small + (big << (2 * split)) + (middle << (split));
     }
     if (n < m) {
         return (other * (*this));
     }
+    /*
     int carry = 0;
     for (int i = 0; i < n; ++i) {
         //cout << "PRODUCT" << numVec[i] << " " << other.getVec()[0] << endl;
-        int prod = (ll)numVec[i] * (ll)other.getVec()[0];
+        int prod = numVec[i] & other.getVec()[0];
         //cout << prod << endl;
         answer.push_back((carry + prod) % limit);
         carry = (carry + prod) / limit;
@@ -266,8 +270,11 @@ BigInt BigInt::operator*(const BigInt& other) const {
     //cout << "carry" << carry << endl;
     if (carry) {
         answer.push_back(carry);
+    }*/
+    if (other.getSign()) {
+        return *this;
     }
-    return BigInt(answer, sign == other.getSign());
+    return -(*this);
 }
 
 BigInt BigInt::operator/(const BigInt& other) const {

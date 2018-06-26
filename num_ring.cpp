@@ -35,7 +35,7 @@ BigInt Inverse (const BigInt& num, const BigInt& div) {
 }
 
 NumRing::NumRing(const BigInt& base, const BigInt& num) :
-base{abs(base)}, num{num % base} {
+base{abs(base)}, num{((num % base) + abs(base)) % abs(base)} {
     if (base == BigInt(0)) {
         std::overflow_error("Divide by zero exception");
     }

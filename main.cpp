@@ -46,6 +46,7 @@ int main (int argc, char** argv) {
             cout << "n + m mod b is " << (na + ma).getNum() << endl;
             cout << "n - m mod b is " << (na - ma).getNum() << endl;
             cout << "n * m mod b is " << (na * ma).getNum() << endl;
+            
             try {
                 NumRing quo = na / ma;
                 cout << "n / m mod b is " << quo.getNum() << endl;
@@ -55,7 +56,8 @@ int main (int argc, char** argv) {
             catch (...) {
                 cout << "gcd not 1" << endl;
             }
-            cout << "n ^ m mod b is " << exp(na, m).getNum() << endl;
+             
+            cout << "n ^ m mod b is " << exp(na, ma.getNum()).getNum() << endl;
         }
         catch (std::overflow_error) {
             cout << "Base is 0" << endl;
