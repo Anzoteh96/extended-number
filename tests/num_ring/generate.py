@@ -5,6 +5,8 @@ for i in range (0, 100):
     g.write('test'+str(i) + '\n')
     file_name = 'test' + str(i) + '.in'
     f = open(file_name, 'w')
+    h = open('test' + str(i) + '.args', 'w')
+    h.write('2\n')
     b = randint(-(10**(3 * i)), 10**(3 * i))
     n = randint(-(10**(3 * i)), 10**(3 * i))
     m = randint(-(10**(3 * i)), 10**(3 * i))

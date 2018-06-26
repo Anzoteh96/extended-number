@@ -16,7 +16,6 @@ class BigInt {
     void removeLeadZero();
     std::string prettyPrint() const;
 public:
-    void shift(unsigned int m);
     BigInt();
     BigInt(std::vector<bool>numVec, bool sign);
     BigInt(unsigned int num, bool sign);
@@ -40,8 +39,8 @@ public:
     BigInt& operator*=(const BigInt& other);
     BigInt& operator/=(const BigInt& other);
     BigInt& operator%=(const BigInt& other);
-    BigInt operator<<(int m);
-    BigInt operator>>(int m);
+    BigInt operator<<(int m) const;
+    BigInt operator>>(int m) const;
     std::vector<bool> getVec() const;
     bool getSign() const;
     friend std::ostream &operator<<(std::ostream &out, const BigInt &bi);

@@ -1,9 +1,9 @@
 Enter the number base b:
 Enter two numbers n and m:
-b is 440696132537
-n mod b is 298953568252
-m mod b is 98963520507
-n + m is 397917088759
-n - m is 199990047745
-n * m is 169724393206
-n ** m is 136503158630
+b is 439840841343
+n mod b is 352667947302
+m mod b is 89648733095
+n + m is 2475839054
+n - m is 263019214207
+n * m is 65960876241
+n ** m is 11981907357

@@ -8,6 +8,74 @@ using namespace std;
 
 typedef long long int ll;
 
+vector<bool>add(const vector<bool>& fst, const vector<bool>& scd) {
+    int total_sz = (fst.size() >= scd.size() ? fst.size() : scd.size());
+    vector<bool>answer;
+    bool carry = false;
+    for (int i = 0; i < total_sz; ++i) {
+        bool fst_ind = (fst.size() > i ? fst[i] : false);
+        bool scd_ind = (scd.size() > i ? scd[i] : false);
+        answer.push_back(fst_ind ^ scd_ind ^ carry);
+        carry = (fst_ind && scd_ind) || (fst_ind && carry) || (scd_ind && carry);
+    }
+    if (carry) {
+        answer.push_back(carry);
+    }
+    return answer;
+}
+
+//subtraction: require fst >= scd
+vector<bool>sub(const vector<bool>& fst, const vector<bool>& scd) {
+    int total_sz = (fst.size() >= scd.size() ? fst.size() : scd.size());
+    vector<bool>answer;
+    bool borrow = false;
+    for (int i = 0; i < total_sz; ++i) {
+        bool fst_ind = (fst.size() > i ? fst[i] : false);
+        bool scd_ind = (scd.size() > i ? scd[i] : false);
+        answer.push_back(fst_ind ^ scd_ind ^ borrow);
+        borrow = (scd_ind && borrow) || (!fst_ind && scd_ind) || (!fst_ind && borrow);
+    }
+    while (answer.size() > 1 && !answer.back()) {
+        answer.pop_back();
+    }
+    return answer;
+}
+
+vector<bool>left_shift(const vector<bool>& fst, int m) {
+    vector<bool>answer(fst.size() + m);
+    copy(fst.begin(), fst.end(), answer.begin() + m);
+    return answer;
+}
+
+vector<bool>mult(vector<bool>fst, vector<bool> scd) {
+    if (fst == vector<bool>{0} || scd == vector<bool>{0}) {
+        return vector<bool>{0};
+    }
+    if (scd.size() > fst.size()) {
+        return mult(scd, fst);
+    }
+    if (scd.size() == 1) {
+        return fst;
+    }
+    int n = fst.size();
+    int m = scd.size();
+    int split = (scd.size() + 1) / 2;
+    vector<bool>a0(split);
+    vector<bool>a1(n - split);
+    vector<bool>a2(split);
+    vector<bool>a3(m - split);
+    copy(fst.begin(), fst.begin() + split, a0.begin());
+    copy(fst.begin() + split, fst.end(), a1.begin());
+    copy(scd.begin(), scd.begin() + split, a2.begin());
+    copy(scd.begin() + split, scd.end(), a3.begin());
+    vector<bool> small = mult(a0, a2);
+    vector<bool> big = mult(a1, a3);
+    vector<bool> med = sub(sub(mult(add(a0, a1), add(a2, a3)), small), big);
+    big = left_shift(big, 2 * split);
+    med = left_shift(med, split);
+    return add(add(small, big), med);
+}
+
 void BigInt::removeLeadZero() {
     while (numVec.size() > 1 && numVec.back() == 0) {
         numVec.pop_back();
@@ -59,14 +127,6 @@ string BigInt::prettyPrint() const {
         target += to_string(answer[i]);
     }
     return target;
-}
-
-void BigInt::shift(unsigned int m) {
-    reverse(numVec.begin(), numVec.end());
-    for (int i = 0; i < m; ++i) {
-        numVec.push_back(0);
-    }
-    reverse(numVec.begin(), numVec.end());
 }
 
 BigInt::BigInt(): numVec{vector<bool>{0}}, sign{true} {}
@@ -177,11 +237,6 @@ bool BigInt::operator>=(const BigInt& other) const {
 }
 
 BigInt BigInt::operator+(const BigInt& other) const {
-    int sz = numVec.size();
-    int other_sz = other.getVec().size();
-    int total_sz = (sz >= other_sz ? sz : other_sz);
-    short int carry = 0;
-    vector<bool>answer;
     //For simplicity we just consider the case of both positive since the other case can be dealt similarly
     if (other == BigInt(0)) {
         return *this;
@@ -189,16 +244,7 @@ BigInt BigInt::operator+(const BigInt& other) const {
     if (sign != other.sign) {
         return *this - (-other);
     }
-    for (int i = 0; i < total_sz; ++i) {
-        short int k = (numVec.size() > i ? numVec[i] : 0);
-        short int l = (other.getVec().size() > i ? other.getVec()[i] : 0);
-        answer.push_back(k ^ l ^ carry);
-        carry = (k + l + carry) / limit;
-    }
-    if (carry) {
-        answer.push_back(carry);
-    }
-    return BigInt(answer, sign);
+    return BigInt(add(numVec, other.getVec()), sign);
 }
 
 BigInt BigInt::operator-(const BigInt& other) const {
@@ -208,73 +254,11 @@ BigInt BigInt::operator-(const BigInt& other) const {
     if (abs(*this) < abs(other)) {
         return - (other - (*this));
     }
-    int sz = numVec.size();
-    int other_sz = other.getVec().size();
-    int total_sz = (sz >= other_sz ? sz : other_sz);
-    vector<bool> answer;
-    short int borrow = 0;
-    for (int i = 0; i < total_sz; ++i) {
-        short int k = (numVec.size() > i ? numVec[i] : 0);
-        short int l = (other.getVec().size() > i ? other.getVec()[i] : 0);
-        short int temp = k - l - borrow;
-        short int temp_borrow = 0;
-        while (temp < 0) {
-            temp += limit;
-            ++temp_borrow;
-        }
-        answer.push_back(temp);
-        borrow = temp_borrow;
-    }
-    return BigInt(answer, sign);
+    return BigInt(sub(numVec, other.getVec()), sign);
 }
 
 BigInt BigInt::operator*(const BigInt& other) const {
-    //we shall use Karatsuba's algorithm to speed up computations
-    if (*this == BigInt(0) || other == BigInt(0)) {
-        return BigInt(0);
-    }
-    vector<bool>answer;
-    int n = numVec.size();
-    int m = other.getVec().size();
-    vector<bool> other_vec = other.getVec();
-    int two_split = min(n, m);
-    if (two_split > 1) {
-        int split = two_split / 2;
-        vector<bool>a0(split);
-        vector<bool>a1(n - split);
-        vector<bool>a2(split);
-        vector<bool>a3(m - split);
-        copy(numVec.begin(), numVec.begin() + split, a0.begin());
-        copy(numVec.begin() + split, numVec.end(), a1.begin());
-        copy(other_vec.begin(), other_vec.begin() + split, a2.begin());
-        copy(other_vec.begin() + split, other_vec.end(), a3.begin());
-        BigInt small = BigInt(a0, sign) * BigInt(a2, other.getSign());
-        BigInt big = BigInt(a1, sign) * BigInt(a3, other.getSign());
-        BigInt middle
-        = (BigInt(a0, sign) + BigInt(a1, sign)) * (BigInt(a2, other.getSign()) +
-                                                   BigInt(a3, other.getSign())) - small - big;
-        return small + (big << (2 * split)) + (middle << (split));
-    }
-    if (n < m) {
-        return (other * (*this));
-    }
-    /*
-    int carry = 0;
-    for (int i = 0; i < n; ++i) {
-        //cout << "PRODUCT" << numVec[i] << " " << other.getVec()[0] << endl;
-        int prod = numVec[i] & other.getVec()[0];
-        //cout << prod << endl;
-        answer.push_back((carry + prod) % limit);
-        carry = (carry + prod) / limit;
-    }
-    //cout << "carry" << carry << endl;
-    if (carry) {
-        answer.push_back(carry);
-    }*/
-    if (other.getSign()) {
-        return *this;
-    }
-    return -(*this);
+    return BigInt(mult(numVec, other.getVec()), sign == other.getSign());
 }
 
 BigInt BigInt::operator/(const BigInt& other) const {
@@ -294,7 +278,7 @@ BigInt BigInt::operator/(const BigInt& other) const {
     }
     //now that lo = hi
     BigInt digit = BigInt(1, sign == other.getSign());
-    digit.shift(shift_amount);
+    digit = digit << shift_amount;
     BigInt prod = digit * other;
     return ((*this - prod) / other) + digit;
 }
@@ -328,14 +312,14 @@ BigInt& BigInt::operator%=(const BigInt& other) {
     return *this;
 }
 
-BigInt BigInt::operator<<(int m) {
+BigInt BigInt::operator<<(int m) const {
     int n = numVec.size();
     vector<bool>answer(n + m);
     copy(numVec.begin(), numVec.end(), answer.begin() + m);
     return BigInt(answer, sign);
 }
 
-BigInt BigInt::operator>>(int m) {
+BigInt BigInt::operator>>(int m) const {
     if (numVec.size() <= m) {
         return BigInt(0);
     }

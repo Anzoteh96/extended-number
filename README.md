@@ -9,7 +9,7 @@ Update: after some consideration I decided to use base 2 storage of digits inste
 - it simulates more closely on how a compiler performs arithmetic operations. 
 - For my next part of project (NumRing), I decided to do efficient exponentiation, which will be beneficial if the bitwise operations can be efficiently and conveniently done here. 
 
-Status: takes 75.655 seconds in total to go through all the basic arithmetic steps for 100 files (the biggest file, test99 alone takes 1.964 seconds, mainly due to multiplication). All answer correct except test0 where a remainder of 0 is outputted as -0. The next thing to optimize is the multiplication algorithm. 
+Status: takes 15.559 seconds in total to go through all the basic arithmetic steps for 100 files (the biggest file, test99 alone takes 0.366 seconds, mainly due to multiplication). The answers are correct. (Still looking into how to optimize multiplication).
 
 ## NumRing: ring of number modulo n (presented as the field 'base'). 
 
@@ -18,4 +18,4 @@ There are a few features making this different from normal integers:
 - The number a/b can still be an integer if b is relatively prime to n. 
 - The fast exponentiation (a**b in python, a^b in LaTeX, pow(a, b) in C++) is possible without going over-memory. 
 
-Status: It does seem like the answers are correct, but the fast exponentiation is not efficient enough if there are more than 20 digits. The bottleneck lies with multiplication of BigInt. 
+Status: It does seem like the answers are correct, but the fast exponentiation is not efficient enough if there are more than 20 digits (test10.in, with numbers about 30 digits, takes 18.475 seconds; test20.in, with numbers about 60 digits, takes 232.01 seconds). The bottleneck lies with multiplication of BigInt. 
