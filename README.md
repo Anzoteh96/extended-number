@@ -9,8 +9,11 @@ Update: after some consideration I decided to use base 2 storage of digits inste
 - it simulates more closely on how a compiler performs arithmetic operations. 
 - For my next part of project (NumRing), I decided to do efficient exponentiation, which will be beneficial if the bitwise operations can be efficiently and conveniently done here. 
 
-Status: takes 3 minutes and 3 seconds in total to go through all the basic arithmetic steps for 100 files. All answer correct except test0 where a remainder of 0 is outputted as -0. 
+Status: takes 75.655 seconds in total to go through all the basic arithmetic steps for 100 files (the biggest file, test99 alone takes 1.964 seconds, mainly due to multiplication). All answer correct except test0 where a remainder of 0 is outputted as -0. The next thing to optimize is the multiplication algorithm. 
 
 ## NumRing: ring of number modulo n (presented as the field 'base'). 
 
-Just started to do this new part of my project. An interesting feature is that for this ring, those numbers relatively prime to n has an inverse. Thus division of two numbers (with divisor relatively prime to n) is an integer. 
+There are a few features making this different from normal integers: 
+- Since numbers wrap around (n is considered as 0), total ordering no longer makes sense. 
+- The number a/b can still be an integer if b is relatively prime to n. 
+- The fast exponentiation (a**b in python, a^b in LaTeX, pow(a, b) in C++) is possible without going over-memory. 

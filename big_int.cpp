@@ -360,6 +360,18 @@ istream &operator>>(istream &in, BigInt &bi) {
     cin >> s;
     int n = s.length();
     bi = BigInt(0);
+    BigInt now = BigInt(1);
+    for (int i = n - 1; i >= 0; --i) {
+        if (s[i] == '-') break;
+        int k = int(s[i]) - int('0');
+        for (int j = 0; j <= 3; ++j) {
+            if ((k >> j) % 2) {
+                bi += (now << j);
+            }
+        }
+        now = ((now << 1) + (now << 3));
+    }
+    /*
     for (int i = 0; i < n; ++i) {
         if (i == 0 && s[i] == '-') {
             bi.sign = false;
@@ -371,7 +383,7 @@ istream &operator>>(istream &in, BigInt &bi) {
         int dgt = int(s[i]) - int('0');
         bi = (bi * BigInt(10));
         bi = (bi + BigInt(dgt));
-    }
+    }*/
     if (s[0] == '-') {
         bi.sign = false;
     }
