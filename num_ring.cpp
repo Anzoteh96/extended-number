@@ -83,6 +83,7 @@ NumRing exp (const NumRing& theBase, const BigInt& bi) {
     BigInt now = BigInt(num);
     BigInt answer = BigInt(1);
     for (int i = 0; i < sz; ++i) {
+        //cout << i << endl;
         if (bi.getVec()[i]) {
             answer *= now;
             answer %= theBase.getBase();

@@ -18,4 +18,10 @@ There are a few features making this different from normal integers:
 - The number a/b can still be an integer if b is relatively prime to n. 
 - The fast exponentiation (a**b in python, a^b in LaTeX, pow(a, b) in C++) is possible without going over-memory. 
 
-Status: It does seem like the answers are correct, but the fast exponentiation is not efficient enough if there are more than 20 digits (test10.in, with numbers about 30 digits, takes 18.475 seconds; test20.in, with numbers about 60 digits, takes 232.01 seconds). The bottleneck lies with multiplication of BigInt. 
+Status: It does seem like the answers are correct, but the fast exponentiation is not efficient enough, with the following results: 
+- test10.in: 2.169s (30 digits)
+- test20.in: 13.540s (60 digits)
+- test30.in: 40.083s (90 digits)
+- test40.in: 81.852s (120 digits)
+- test50.in: 144.158s (150 digits)
+- test60.in: 249.017s (180 digits)

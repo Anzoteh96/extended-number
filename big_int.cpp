@@ -76,6 +76,38 @@ vector<bool>mult(vector<bool>fst, vector<bool> scd) {
     return add(add(small, big), med);
 }
 
+// assume scd is not a zero vector
+vector<bool>div(vector<bool>fst, vector<bool> scd) {
+    if (fst.size() < scd.size()) {
+        return vector<bool>{0};
+    }
+    vector<bool>rem = fst;
+    vector<bool>answer(fst.size() - scd.size() + 1);
+    for (int i = fst.size() - scd.size(); i >= 0; --i) {
+        vector<bool>temp = rem;
+        bool borrow = false;
+        for (int j = 0; j < scd.size(); ++j) {
+            bool fst_ind = temp[i + j];
+            bool scd_ind = scd[j];
+            temp[i + j] = (fst_ind ^ scd_ind ^ borrow);
+            borrow = (scd_ind && borrow) || (!fst_ind && scd_ind) || (!fst_ind && borrow);
+        }
+        for (int j = scd.size(); i + j < fst.size(); ++j) {
+            bool fst_ind = temp[i + j];
+            temp[i + j] = (fst_ind ^ borrow);
+            borrow = (!fst_ind && borrow);
+        }
+        if (!borrow) {
+            rem = temp;
+            answer[i] = 1;
+        }
+    }
+    while (answer.size() > 1 && !answer.back()) {
+        answer.pop_back();
+    }
+    return answer;
+}
+
 void BigInt::removeLeadZero() {
     while (numVec.size() > 1 && numVec.back() == 0) {
         numVec.pop_back();
@@ -262,25 +294,11 @@ BigInt BigInt::operator*(const BigInt& other) const {
 }
 
 BigInt BigInt::operator/(const BigInt& other) const {
-    if (abs(*this) < abs(other)) {
-        return BigInt(0);
-    }
+    //try iterative instead of recursion. Might speed up?
     if (other == BigInt(0)) {
         throw std::overflow_error("Divide by zero exception");
     }
-    int n = numVec.size();
-    int m = other.getVec().size();
-    int shift_amount = n - m;
-    BigInt target = BigInt(vector<bool>(numVec.end() - m, numVec.end()), sign);
-    if (abs(target) < abs(other)) {
-        target = BigInt(vector<bool>(numVec.end() - m - 1, numVec.end()), sign);
-        shift_amount = n - m - 1;
-    }
-    //now that lo = hi
-    BigInt digit = BigInt(1, sign == other.getSign());
-    digit = digit << shift_amount;
-    BigInt prod = digit * other;
-    return ((*this - prod) / other) + digit;
+    return BigInt(div(numVec, other.getVec()), sign == other.getSign());
 }
 
 BigInt BigInt::operator%(const BigInt& other) const {
