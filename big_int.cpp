@@ -2,11 +2,15 @@
 #include <cmath>
 #include <string>
 #include <algorithm>
+#include <complex>
+#include <cmath>
 #include "big_int.h"
 
 using namespace std;
 
 typedef long long int ll;
+
+const double PI = 3.141592653589793238460;
 
 vector<bool>add_helper
 (const vector<bool>& fst, int fstart, int ffinish, const vector<bool>& scd, int sstart, int sfinish) {
@@ -54,6 +58,7 @@ vector<bool>left_shift(const vector<bool>& fst, int m) {
     return answer;
 }
 
+//still Karatsuba-like (will keep this even after I finished doing fft multiplication)
 vector<bool>mult_helper
 (const vector<bool>& fst, int fstart, int ffinish, const vector<bool>& scd, int sstart, int sfinish) {
     if (sfinish - sstart > ffinish - fstart) {
@@ -78,8 +83,82 @@ vector<bool>mult_helper
     return add(add(small, big), med);
 }
 
-vector<bool>mult(vector<bool>fst, vector<bool> scd) {
-    return mult_helper(fst, 0, fst.size(), scd, 0, scd.size());
+void fft(vector<complex<double>>& vec) {
+    if (vec.size() == 1) {
+        return;
+    }
+    //divide
+    vector<complex<double>>even(vec.size() / 2);
+    vector<complex<double>>odd(vec.size() / 2);
+    for (int i = 0; i < vec.size() / 2; ++i) {
+        even[i] = vec[2 * i];
+        odd[i] = vec[2 * i + 1];
+    }
+    //conquer
+    fft(even);
+    fft(odd);
+    //combine
+    for (int k = 0; k < vec.size()/2; ++k)
+    {
+        complex<double> t = std::polar(1.0, -2 * PI * k / vec.size()) * odd[k];
+        vec[k    ] = even[k] + t;
+        vec[k+vec.size()/2] = even[k] - t;
+    }
+}
+
+//inverse of the fft
+void ifft(vector<complex<double>>& vec) {
+    //conjugate it first
+    if (vec.size() == 1) {
+        return;
+    }
+    for (int i = 0; i < vec.size(); ++i) {
+        vec[i] = conj(vec[i]);
+    }
+    fft(vec);
+    for (int i = 0; i < vec.size(); ++i) {
+        vec[i] = conj(vec[i]);
+    }
+    for (int i = 0; i < vec.size(); ++i) {
+        vec[i] /= vec.size();
+    }
+}
+
+//try fft and see?
+vector<bool>mult_fft(const vector<bool>& fst, const vector<bool>& scd) {
+    int total_sz = fst.size() + scd.size();
+    int sz_target = 1;
+    while (sz_target < total_sz) {
+        sz_target *= 2;
+    }
+    //polynomial multiplication
+    vector<complex<double>>fst_comp(sz_target);
+    vector<complex<double>>scd_comp(sz_target);
+    for (int i = 0; i < sz_target; ++i) {
+        fst_comp[i] = (fst.size() > i) && fst[i];
+        scd_comp[i] = (scd.size() > i) && scd[i];
+    }
+    fft(fst_comp);
+    fft(scd_comp);
+    vector<complex<double>>ans_comp(sz_target);
+    for (int i = 0; i < sz_target; ++i) {
+        ans_comp[i] = fst_comp[i] * scd_comp[i];
+    }
+    ifft(ans_comp);
+    vector<bool>answer(sz_target, false);
+    int carry = 0;
+    for (int i = 0; i < sz_target; ++i) {
+        answer[i] = (carry + int(abs(ans_comp[i]) + 0.5)) % 2;
+        carry= (carry + int(abs(ans_comp[i]) + 0.5)) / 2;
+    }
+    while (answer.size() > 1 && !answer.back()) {
+        answer.pop_back();
+    }
+    return answer;
+}
+
+vector<bool>mult(const vector<bool>& fst, const vector<bool>& scd) {
+    return mult_fft(fst, scd);
 }
 
 // assume scd is not a zero vector
