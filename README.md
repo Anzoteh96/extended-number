@@ -9,7 +9,9 @@ Update: after some consideration I decided to use base 2 storage of digits inste
 - it simulates more closely on how a compiler performs arithmetic operations. 
 - For my next part of project (NumRing), I decided to do efficient exponentiation, which will be beneficial if the bitwise operations can be efficiently and conveniently done here. 
 
-Status: takes 15.559 seconds in total to go through all the basic arithmetic steps for 100 files (the biggest file, test99 alone takes 0.366 seconds, mainly due to multiplication). The answers are correct. (Still looking into how to optimize multiplication).
+Testing: I generated random integers using Python and tested the arithmetic operations on them (using Python code to get the correct output for comparison). The C++ BigInt gives correct answer. 
+
+Running time: for optimization, O2 is being used. The execution time with the largest file (test99.in) is 0.081 seconds while running through all 100 test files take 3.485 seconds. 
 
 ## NumRing: ring of number modulo n (presented as the field 'base'). 
 
@@ -18,10 +20,14 @@ There are a few features making this different from normal integers:
 - The number a/b can still be an integer if b is relatively prime to n. 
 - The fast exponentiation (a**b in python, a^b in LaTeX, pow(a, b) in C++) is possible without going over-memory. 
 
-Status: It does seem like the answers are correct, but the fast exponentiation is not efficient enough, with the following results: 
-- test10.in: 2.169s (30 digits)
-- test20.in: 13.540s (60 digits)
-- test30.in: 40.083s (90 digits)
-- test40.in: 81.852s (120 digits)
-- test50.in: 144.158s (150 digits)
-- test60.in: 249.017s (180 digits)
+Status: It does seem like the answers are correct. The running time is mainly dragged down by exponentiation (which requires repeated iteration of multiplication) with the following results, all compiled using O2 optimization: 
+- test10.in (30 digits) : 0.242s
+- test20.in (60 digits) : 1.498s
+- test30.in (90 digits) : 4.424s
+- test40.in (120 digits) : 9.183s
+- test50.in (150 digits) : 16.615s
+- test60.in (180 digits) : 28.301s
+- test70.in (210 digits) : 43.338s
+- test80.in (240 digits) : 57.965s
+- test90.in (270 digits) : 78.701s
+- test99.in (297 digits) : 98.829s

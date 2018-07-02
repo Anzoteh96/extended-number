@@ -8,14 +8,17 @@ using namespace std;
 
 typedef long long int ll;
 
-vector<bool>add(const vector<bool>& fst, const vector<bool>& scd) {
-    int total_sz = (fst.size() >= scd.size() ? fst.size() : scd.size());
-    vector<bool>answer;
+vector<bool>add_helper
+(const vector<bool>& fst, int fstart, int ffinish, const vector<bool>& scd, int sstart, int sfinish) {
+    int n = ffinish - fstart;
+    int m = sfinish - sstart;
+    int total_sz = (n >= m ? n : m);
+    vector<bool>answer(total_sz);
     bool carry = false;
     for (int i = 0; i < total_sz; ++i) {
-        bool fst_ind = (fst.size() > i ? fst[i] : false);
-        bool scd_ind = (scd.size() > i ? scd[i] : false);
-        answer.push_back(fst_ind ^ scd_ind ^ carry);
+        bool fst_ind = (n > i) && fst[fstart + i];
+        bool scd_ind = (m > i) && scd[sstart + i];
+        answer[i] = fst_ind ^ scd_ind ^ carry;
         carry = (fst_ind && scd_ind) || (fst_ind && carry) || (scd_ind && carry);
     }
     if (carry) {
@@ -24,15 +27,19 @@ vector<bool>add(const vector<bool>& fst, const vector<bool>& scd) {
     return answer;
 }
 
+vector<bool>add(const vector<bool>& fst, const vector<bool>& scd) {
+    return add_helper(fst, 0, fst.size(), scd, 0, scd.size());
+}
+
 //subtraction: require fst >= scd
 vector<bool>sub(const vector<bool>& fst, const vector<bool>& scd) {
     int total_sz = (fst.size() >= scd.size() ? fst.size() : scd.size());
-    vector<bool>answer;
+    vector<bool>answer(total_sz);
     bool borrow = false;
     for (int i = 0; i < total_sz; ++i) {
-        bool fst_ind = (fst.size() > i ? fst[i] : false);
-        bool scd_ind = (scd.size() > i ? scd[i] : false);
-        answer.push_back(fst_ind ^ scd_ind ^ borrow);
+        bool fst_ind = (fst.size() > i) && fst[i];
+        bool scd_ind = (scd.size() > i) && scd[i];
+        answer[i] = fst_ind ^ scd_ind ^ borrow;
         borrow = (scd_ind && borrow) || (!fst_ind && scd_ind) || (!fst_ind && borrow);
     }
     while (answer.size() > 1 && !answer.back()) {
@@ -47,33 +54,32 @@ vector<bool>left_shift(const vector<bool>& fst, int m) {
     return answer;
 }
 
-vector<bool>mult(vector<bool>fst, vector<bool> scd) {
-    if (fst == vector<bool>{0} || scd == vector<bool>{0}) {
-        return vector<bool>{0};
+vector<bool>mult_helper
+(const vector<bool>& fst, int fstart, int ffinish, const vector<bool>& scd, int sstart, int sfinish) {
+    if (sfinish - sstart > ffinish - fstart) {
+        return mult_helper(scd, sstart, sfinish, fst, fstart, ffinish);
     }
-    if (scd.size() > fst.size()) {
-        return mult(scd, fst);
+    if (sfinish - sstart == 1) {
+        if (scd[sstart] == 0) {
+            return vector<bool>{0};
+        }
+        else {
+            return vector<bool>(fst.begin() + fstart, fst.begin() + ffinish);
+        }
     }
-    if (scd.size() == 1) {
-        return fst;
-    }
-    int n = fst.size();
-    int m = scd.size();
-    int split = (scd.size() + 1) / 2;
-    vector<bool>a0(split);
-    vector<bool>a1(n - split);
-    vector<bool>a2(split);
-    vector<bool>a3(m - split);
-    copy(fst.begin(), fst.begin() + split, a0.begin());
-    copy(fst.begin() + split, fst.end(), a1.begin());
-    copy(scd.begin(), scd.begin() + split, a2.begin());
-    copy(scd.begin() + split, scd.end(), a3.begin());
-    vector<bool> small = mult(a0, a2);
-    vector<bool> big = mult(a1, a3);
-    vector<bool> med = sub(sub(mult(add(a0, a1), add(a2, a3)), small), big);
+    int split = (sfinish - sstart + 1) / 2;
+    vector<bool>small = mult_helper(fst, fstart, fstart + split, scd, sstart, sstart + split);
+    vector<bool>big = mult_helper(fst, fstart + split, ffinish, scd, sstart + split, sfinish);
+    vector<bool>med_first = add_helper(fst, fstart, fstart + split, fst, fstart + split, ffinish);
+    vector<bool>med_second = add_helper(scd, sstart, sstart + split, scd, sstart + split, sfinish);
+    vector<bool>med = sub(sub(mult_helper(med_first, 0, med_first.size(), med_second, 0, med_second.size()), small), big);
     big = left_shift(big, 2 * split);
     med = left_shift(med, split);
     return add(add(small, big), med);
+}
+
+vector<bool>mult(vector<bool>fst, vector<bool> scd) {
+    return mult_helper(fst, 0, fst.size(), scd, 0, scd.size());
 }
 
 // assume scd is not a zero vector
@@ -106,6 +112,36 @@ vector<bool>div(vector<bool>fst, vector<bool> scd) {
         answer.pop_back();
     }
     return answer;
+}
+
+// assume scd is not a zero vector
+vector<bool>remain(vector<bool>fst, vector<bool> scd) {
+    if (fst.size() < scd.size()) {
+        return fst;
+    }
+    vector<bool>rem = fst;
+    for (int i = fst.size() - scd.size(); i >= 0; --i) {
+        vector<bool>temp = rem;
+        bool borrow = false;
+        for (int j = 0; j < scd.size(); ++j) {
+            bool fst_ind = temp[i + j];
+            bool scd_ind = scd[j];
+            temp[i + j] = (fst_ind ^ scd_ind ^ borrow);
+            borrow = (scd_ind && borrow) || (!fst_ind && scd_ind) || (!fst_ind && borrow);
+        }
+        for (int j = scd.size(); i + j < fst.size(); ++j) {
+            bool fst_ind = temp[i + j];
+            temp[i + j] = (fst_ind ^ borrow);
+            borrow = (!fst_ind && borrow);
+        }
+        if (!borrow) {
+            rem = temp;
+        }
+    }
+    while (rem.size() > 1 && !rem.back()) {
+        rem.pop_back();
+    }
+    return rem;
 }
 
 void BigInt::removeLeadZero() {
@@ -302,7 +338,7 @@ BigInt BigInt::operator/(const BigInt& other) const {
 }
 
 BigInt BigInt::operator%(const BigInt& other) const {
-    return (*this - (other * (*this / other)));
+    return BigInt(remain(numVec, other.getVec()), sign);
 }
 
 BigInt& BigInt::operator+=(const BigInt& other) {
