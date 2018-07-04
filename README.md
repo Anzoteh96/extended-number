@@ -13,7 +13,7 @@ Testing: I generated random integers using Python and tested the arithmetic oper
 
 Running time: for optimization, O2 is being used. The execution time with the largest file (test99.in) is 0.081 seconds while running through all 100 test files take 3.485 seconds. 
 
-Update 2: That was Karatsuba's algorithm. It's 0.028s for test99.in and 1.526s for all files when I did fast fourier transform. 
+Update 2: That was Karatsuba's algorithm. It's 0.016s for test99.in and 0.845s for all files when I did fast fourier transform (plus some other optimizations).  
 
 ## NumRing: ring of number modulo n (presented as the field 'base'). 
 
@@ -35,13 +35,13 @@ Status: It does seem like the answers are correct. The running time is mainly dr
 - test99.in (297 digits) : 98.829s
 
 Update: after changing from Karatsuba's multiplication to fast fourier transform here's the new result: 
-- test10.in (30 digits) : 0.066s
-- test20.in (60 digits) : 0.305s
-- test30.in (90 digits) : 0.922s
-- test40.in (120 digits) : 1.672s
-- test50.in (150 digits) : 2.739s
-- test60.in (180 digits) : 5.407s
-- test70.in (210 digits) : 7.290s
-- test80.in (240 digits) : 10.170s
-- test90.in (270 digits) : 13.598s
-- test99.in (297 digits) : 17.362s
+- test10.in (30 digits) : 0.033s
+- test20.in (60 digits) : 0.175s
+- test30.in (90 digits) : 0.567s
+- test40.in (120 digits) : 1.127s
+- test50.in (150 digits) : 2.084s
+- test60.in (180 digits) : 3.739s
+- test70.in (210 digits) : 5.567s
+- test80.in (240 digits) : 8.214s
+- test90.in (270 digits) : 11.335s
+- test99.in (297 digits) : 14.961s

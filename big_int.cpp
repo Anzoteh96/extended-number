@@ -46,9 +46,9 @@ vector<bool>sub(const vector<bool>& fst, const vector<bool>& scd) {
         answer[i] = fst_ind ^ scd_ind ^ borrow;
         borrow = (scd_ind && borrow) || (!fst_ind && scd_ind) || (!fst_ind && borrow);
     }
-    while (answer.size() > 1 && !answer.back()) {
-        answer.pop_back();
-    }
+    int ind = total_sz - 1;
+    for (; ind > 0 && !answer[ind]; --ind);
+    answer.resize(ind + 1);
     return answer;
 }
 
@@ -83,26 +83,19 @@ vector<bool>mult_helper
     return add(add(small, big), med);
 }
 
+// guarantee: each of them has size = power of two
 void fft(vector<complex<double>>& vec) {
-    if (vec.size() == 1) {
-        return;
-    }
-    //divide
-    vector<complex<double>>even(vec.size() / 2);
-    vector<complex<double>>odd(vec.size() / 2);
-    for (int i = 0; i < vec.size() / 2; ++i) {
-        even[i] = vec[2 * i];
-        odd[i] = vec[2 * i + 1];
-    }
-    //conquer
-    fft(even);
-    fft(odd);
-    //combine
-    for (int k = 0; k < vec.size()/2; ++k)
-    {
-        complex<double> t = std::polar(1.0, -2 * PI * k / vec.size()) * odd[k];
-        vec[k    ] = even[k] + t;
-        vec[k+vec.size()/2] = even[k] - t;
+    for (int start = 2; start <= vec.size(); start *= 2) {
+        int gap = vec.size() / start;
+        vector<complex<double>> temp (vec.size());
+        for (int i = 0; i < gap; ++i) {
+            for (int j = 0; j < start / 2; ++j) {
+                complex<double> t = std::polar(1.0, -2 * PI * j / start) * vec[(2 * j + 1) * gap + i];
+                temp[j * gap + i] = vec[2 * j * gap + i] + t;
+                temp[j * gap + i + vec.size() / 2] = vec[2 * j * gap + i] - t;
+            }
+        }
+        vec = std::move(temp);
     }
 }
 
@@ -118,8 +111,6 @@ void ifft(vector<complex<double>>& vec) {
     fft(vec);
     for (int i = 0; i < vec.size(); ++i) {
         vec[i] = conj(vec[i]);
-    }
-    for (int i = 0; i < vec.size(); ++i) {
         vec[i] /= vec.size();
     }
 }
@@ -145,15 +136,15 @@ vector<bool>mult_fft(const vector<bool>& fst, const vector<bool>& scd) {
         ans_comp[i] = fst_comp[i] * scd_comp[i];
     }
     ifft(ans_comp);
-    vector<bool>answer(sz_target, false);
+    vector<bool>answer(total_sz, false);
     int carry = 0;
-    for (int i = 0; i < sz_target; ++i) {
+    for (int i = 0; i < total_sz; ++i) {
         answer[i] = (carry + int(abs(ans_comp[i]) + 0.5)) % 2;
         carry= (carry + int(abs(ans_comp[i]) + 0.5)) / 2;
     }
-    while (answer.size() > 1 && !answer.back()) {
-        answer.pop_back();
-    }
+    int ind = total_sz - 1;
+    for (; ind > 0 && !answer[ind]; --ind);
+    answer.resize(ind + 1);
     return answer;
 }
 
@@ -187,9 +178,9 @@ vector<bool>div(vector<bool>fst, vector<bool> scd) {
             answer[i] = 1;
         }
     }
-    while (answer.size() > 1 && !answer.back()) {
-        answer.pop_back();
-    }
+    int ind = answer.size() - 1;
+    for (; ind > 0 && !answer[ind]; --ind);
+    answer.resize(ind + 1);
     return answer;
 }
 
@@ -217,9 +208,9 @@ vector<bool>remain(vector<bool>fst, vector<bool> scd) {
             rem = temp;
         }
     }
-    while (rem.size() > 1 && !rem.back()) {
-        rem.pop_back();
-    }
+    int ind = rem.size() - 1;
+    for (; ind > 0 && !rem[ind]; --ind);
+    rem.resize(ind + 1);
     return rem;
 }
 
@@ -239,13 +230,13 @@ string BigInt::prettyPrint() const {
     for (int i = 0; i < ref.size(); ++i) {
         if (ref[i]) {
             //now always >= answer
-            vector<int>temp;
+            vector<int>temp(now.size());
             int carry = 0;
             for (int j = 0; j < now.size(); ++j) {
                 int dgt_1 = (answer.size() > j ? answer[j] : 0);
                 int dgt_2 = (now.size() > j ? now[j] : 0);
                 int total = dgt_1 + dgt_2 + carry;
-                temp.push_back(total % 10);
+                temp[j] = total % 10;
                 carry = total / 10;
             }
             if (carry) {
@@ -253,27 +244,89 @@ string BigInt::prettyPrint() const {
             }
             answer = temp;
         }
-        //multiply now by 2
-        vector<int>temp_mult;
         int carry_mult = 0;
         for (int j = 0; j < now.size(); ++j) {
             int total = (now[j] * 2) + carry_mult;
-            temp_mult.push_back(total % 10);
+            now[j] = total % 10;
             carry_mult = total/ 10;
         }
         if (carry_mult) {
-            temp_mult.push_back(carry_mult);
+            now.push_back(carry_mult);
         }
-        now = temp_mult;
     }
-    string target = "";
+    int sz = (sign ? answer.size() : answer.size() + 1);
+    string target(sz, '0');
     if (!sign) {
-        target += "-";
+        target[0] = '-';
     }
     for (int i = answer.size() - 1; i >= 0; --i) {
-        target += to_string(answer[i]);
+        target[sz - i - 1] = '0' + answer[i];
+        //cout << sz << " " << target[sz - i - 1] << endl;
     }
+    //cout << target.length() << " " << target << endl;
     return target;
+}
+
+//scrapped helper function due to inefficiency but will be there for honor
+vector<bool>expo(const vector<bool>& vec, int m) {
+    vector<bool>ans = vector<bool>{1};
+    vector<bool>now = vec;
+    int m1 = m;
+    while (m1) {
+        if (m1 % 2 == 1) {
+            ans = mult(ans, now);
+        }
+        now = mult(now, now);
+        m1 /= 2;
+    }
+    return ans;
+}
+
+//here we first assume characters of s are all 0-9
+vector<bool>base_2(const string& s) {
+    int n = s.length();
+    vector<bool>answer{0};
+    vector<bool>now{1};
+    for (int i = n - 1; i >= 0; --i) {
+        int digit = s[i] - int('0');
+        for (int j = 0; j <= 3; ++j) {
+            if ((digit >> j) % 2) {
+                //cout << BigInt(answer, true) << " " << BigInt(now, true) << " " << j << " ";
+                bool carry = false;
+                int total_sz = now.size() + j;
+                answer.resize(max(answer.size(), now.size() + j));
+                for (int k = j; k < total_sz; ++k) {
+                    bool fst = (answer.size() > k) && answer[k];
+                    bool scd = now[k - j];
+                    answer[k] = (fst ^ scd) ^ carry;
+                    carry = (fst && scd) || (fst && carry) || (scd && carry);
+                    //cout << BigInt(answer, true) << endl;
+                }
+                if (carry) {
+                    answer.push_back(carry);
+                }
+                //cout << BigInt(answer, true) << endl;
+            }
+        }
+        //multiply now by 10
+        //multiply by 8 first
+        //then + 2 times the previous now
+        int prev_sz = now.size();
+        now = left_shift(now, 3);
+        //cout << "now" << BigInt(now, true) << endl;
+        bool carry = false;
+        for (int i = 1; i < now.size(); ++i) {
+            bool fst = now[i];
+            bool scd = (now.size() > i + 2) && now[i + 2];
+            now[i] = fst ^ scd ^ carry;
+            carry = (fst && scd) || (fst && carry) || (scd && carry);
+        }
+        if (carry) {
+            now.push_back(carry);
+        }
+        //cout << n - i << " " << BigInt(now, true) << endl;
+    }
+    return answer;
 }
 
 BigInt::BigInt(): numVec{vector<bool>{0}}, sign{true} {}
@@ -421,27 +474,27 @@ BigInt BigInt::operator%(const BigInt& other) const {
 }
 
 BigInt& BigInt::operator+=(const BigInt& other) {
-    *this = (*this + other);
+    *this = std::move(*this + other);
     return *this;
 }
 
 BigInt& BigInt::operator-=(const BigInt& other) {
-    *this = (*this - other);
+    *this = std::move(*this - other);
     return *this;
 }
 
 BigInt& BigInt::operator*=(const BigInt& other) {
-    *this = (*this * other);
+    *this = std::move(*this * other);
     return *this;
 }
 
 BigInt& BigInt::operator/=(const BigInt& other) {
-    *this = (*this / other);
+    *this = std::move(*this / other);
     return *this;
 }
 
 BigInt& BigInt::operator%=(const BigInt& other) {
-    *this = (*this % other);
+    *this = std::move(*this % other);
     return *this;
 }
 
@@ -481,38 +534,12 @@ ostream &operator<<(ostream &out, const BigInt &bi) {
 
 istream &operator>>(istream &in, BigInt &bi) {
     string s;
-    cin >> s;
-    int n = s.length();
-    bi = BigInt(0);
-    BigInt now = BigInt(1);
-    for (int i = n - 1; i >= 0; --i) {
-        if (s[i] == '-') break;
-        int k = int(s[i]) - int('0');
-        for (int j = 0; j <= 3; ++j) {
-            if ((k >> j) % 2) {
-                bi += (now << j);
-            }
-        }
-        now = ((now << 1) + (now << 3));
-    }
-    /*
-    for (int i = 0; i < n; ++i) {
-        if (i == 0 && s[i] == '-') {
-            bi.sign = false;
-            continue;
-        }
-        if ((s[i] < '0' || s[i] > '9') && (i > 0 || s[i] != '-')) {
-            break;
-        }
-        int dgt = int(s[i]) - int('0');
-        bi = (bi * BigInt(10));
-        bi = (bi + BigInt(dgt));
-    }*/
+    in >> s;
     if (s[0] == '-') {
-        bi.sign = false;
+        bi = BigInt(base_2(s.substr(1, s.length() - 1)), false);
     }
-    if (bi.numVec == vector<bool>{0}) {
-        bi.sign = true;
+    else {
+        bi = BigInt(base_2(s), true);
     }
     return in;
 }
